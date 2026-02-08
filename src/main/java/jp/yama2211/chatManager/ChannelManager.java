@@ -15,7 +15,17 @@ public class ChannelManager {
     }
 
     public void createChannel(String name, UUID owner, boolean isPublic) {
-        channels.put(name.toLowerCase(), new ChannelData(name, owner, isPublic));
+        ChannelData data = new ChannelData(name, owner, isPublic);
+        // 作成者を最初からメンバーに追加
+        data.members.add(owner);
+        channels.put(name.toLowerCase(), data);
+
+        // 作成者をそのチャンネルに参加状態にする
+        Player player = org.bukkit.Bukkit.getPlayer(owner);
+        if (player != null) {
+            playerInChannel.put(owner, name.toLowerCase());
+        }
+
         saveConfig();
     }
 
@@ -29,7 +39,6 @@ public class ChannelManager {
         return true;
     }
 
-    // 招待トークン生成 (英数字8桁)
     public String createInvite(String channelName, UUID targetUuid) {
         ChannelData data = channels.get(channelName.toLowerCase());
         if (data == null) return null;
@@ -42,8 +51,11 @@ public class ChannelManager {
     public boolean joinWithToken(Player player, String token) {
         for (ChannelData data : channels.values()) {
             if (data.pendingInvites.containsKey(token) && data.pendingInvites.get(token).equals(player.getUniqueId())) {
-                data.pendingInvites.remove(token); // 1回きり
+                data.pendingInvites.remove(token);
+                // メンバーリストに追加してから参加処理
+                data.members.add(player.getUniqueId());
                 joinChannel(player, data.name);
+                saveConfig(); // メンバー増員を保存
                 return true;
             }
         }
@@ -53,25 +65,21 @@ public class ChannelManager {
     public void joinChannel(Player player, String name) {
         ChannelData data = channels.get(name.toLowerCase());
         if (data == null) return;
-        if (!data.isPublic && !data.members.contains(player.getUniqueId()) && !data.owner.equals(player.getUniqueId())) return;
+
+        // 公開か、あるいはメンバーリストに含まれている場合のみ参加可能
+        if (!data.isPublic && !data.members.contains(player.getUniqueId())) return;
 
         leaveChannel(player);
-        data.members.add(player.getUniqueId());
         playerInChannel.put(player.getUniqueId(), name.toLowerCase());
     }
 
     public void leaveChannel(Player player) {
-        String current = playerInChannel.remove(player.getUniqueId());
-        if (current != null) {
-            ChannelData data = channels.get(current);
-            if (data != null) data.members.remove(player.getUniqueId());
-        }
+        playerInChannel.remove(player.getUniqueId());
     }
 
-    // --- 保存・読み込み ---
     public void saveConfig() {
         FileConfiguration config = plugin.getConfig();
-        config.set("channels", null); // クリア
+        config.set("channels", null);
         for (ChannelData data : channels.values()) {
             String path = "channels." + data.name;
             config.set(path + ".owner", data.owner.toString());
@@ -95,7 +103,10 @@ public class ChannelManager {
     }
 
     public String getPlayerChannel(Player player) { return playerInChannel.get(player.getUniqueId()); }
-    public Set<UUID> getMembers(String name) { return channels.get(name.toLowerCase()).members; }
+    public Set<UUID> getMembers(String name) {
+        ChannelData data = channels.get(name.toLowerCase());
+        return data != null ? data.members : Collections.emptySet();
+    }
     public Set<String> getChannelList() { return channels.keySet(); }
     public ChannelData getChannelData(String name) { return channels.get(name.toLowerCase()); }
 }
