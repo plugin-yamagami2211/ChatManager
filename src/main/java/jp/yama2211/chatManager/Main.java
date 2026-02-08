@@ -7,9 +7,16 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
-        ChannelManager manager = new ChannelManager();
+        saveDefaultConfig();
+        ChannelManager manager = new ChannelManager(this);
+
+        // チャンネルコマンドの登録
         getCommand("channel").setExecutor(new ChannelCommand(manager));
+
+        // 全体チャットコマンドの登録
+        GlobalCommand globalCommand = new GlobalCommand();
+        getCommand("global").setExecutor(globalCommand);
+
         getServer().getPluginManager().registerEvents(new ChatListener(manager), this);
     }
 

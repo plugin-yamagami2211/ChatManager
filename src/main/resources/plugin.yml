@@ -7,4 +7,9 @@ website: https://yama2211.jp/
 commands:
   channel:
     description: チャンネル管理コマンド
-    usage: /channel <create|join|leave|delete|list> [名前]
+    usage: /channel <サブコマンド>
+    aliases: [ch]
+  global:
+    description: 全体チャットにメッセージを送信します
+    usage: /global [メッセージ]
+    aliases: [g]
