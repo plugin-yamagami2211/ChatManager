@@ -5,13 +5,17 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class ChannelCommand implements CommandExecutor {
     private final ChannelManager manager;
@@ -46,7 +50,6 @@ public class ChannelCommand implements CommandExecutor {
                 boolean isPublic = args.length >= 3 && args[2].equalsIgnoreCase("public");
                 manager.createChannel(name, player.getUniqueId(), isPublic);
                 player.sendMessage("§aチャンネル '" + name + "' (" + (isPublic ? "公開" : "非公開") + ") を作成しました。");
-                player.sendMessage("§7※自動的にこのチャンネルに参加しました。");
             }
 
             case "join" -> {
@@ -82,7 +85,7 @@ public class ChannelCommand implements CommandExecutor {
                 }
                 String currentChannel = manager.getPlayerChannel(player);
                 if (currentChannel == null) {
-                    player.sendMessage("§cチャンネルに参加していません。");
+                    player.sendMessage("§c招待を送るには、まずチャンネルに参加してください。");
                     return true;
                 }
 
@@ -92,30 +95,52 @@ public class ChannelCommand implements CommandExecutor {
                     return true;
                 }
 
+                // 既にメンバー（権限を持っている）かチェック
+                ChannelData data = manager.getChannelData(currentChannel);
+                if (data != null && data.members.contains(target.getUniqueId())) {
+                    player.sendMessage("§e" + target.getName() + " は既にこのチャンネルのメンバーです。");
+                    return true;
+                }
+
                 String token = manager.createInvite(currentChannel, target.getUniqueId());
                 String joinCommand = "/channel join " + token;
 
                 target.sendMessage("§e§l--- チャンネル招待 ---");
                 target.sendMessage("§f" + player.getName() + " さんがあなたを §b" + currentChannel + " §fに招待しました。");
-
-                // コマンド文字列の表示
                 target.sendMessage("§7招待コードを使用して参加するには以下のコマンドを入力してください:");
                 target.sendMessage("§e" + joinCommand);
 
-                // クリックボタンの表示
                 Component joinButton = Component.text("[ここをクリックして参加]")
                         .color(NamedTextColor.AQUA)
-                        .hoverEvent(HoverEvent.showText(Component.text("クリックしてチャンネルに参加")))
+                        .hoverEvent(HoverEvent.showText(Component.text("クリックして参加")))
                         .clickEvent(ClickEvent.runCommand(joinCommand));
 
                 target.sendMessage(joinButton);
                 player.sendMessage("§a" + target.getName() + " に招待を送りました。");
             }
 
+            case "players" -> {
+                String current = manager.getPlayerChannel(player);
+                if (current == null) {
+                    player.sendMessage("§c現在は全体チャットに参加しています。");
+                    return true;
+                }
+
+                List<UUID> viewerUuids = manager.getActiveViewers(current);
+                List<String> names = new ArrayList<>();
+                for (UUID uuid : viewerUuids) {
+                    Player p = Bukkit.getPlayer(uuid);
+                    if (p != null) names.add(p.getName());
+                }
+
+                player.sendMessage("§b--- チャンネル '" + current + "' の参加者 ---");
+                player.sendMessage("§f" + (names.isEmpty() ? "なし" : String.join(", ", names)));
+            }
+
             case "leave" -> {
                 String current = manager.getPlayerChannel(player);
                 if (current == null) {
-                    player.sendMessage("§cチャンネルに参加していません。");
+                    player.sendMessage("§cどのチャンネルにも参加していません。");
                     return true;
                 }
                 manager.leaveChannel(player);
@@ -130,7 +155,7 @@ public class ChannelCommand implements CommandExecutor {
                 if (manager.deleteChannel(args[1], player)) {
                     player.sendMessage("§a削除しました。");
                 } else {
-                    player.sendMessage("§c削除権限がないか、チャンネルが存在しません。");
+                    player.sendMessage("§c権限がないか、チャンネルが存在しません。");
                 }
             }
 
@@ -154,6 +179,7 @@ public class ChannelCommand implements CommandExecutor {
         player.sendMessage("§f/channel create [名前] [public/private]");
         player.sendMessage("§f/channel join [名前/コード]");
         player.sendMessage("§f/channel invite [プレイヤー]");
+        player.sendMessage("§f/channel players : 参加者表示");
         player.sendMessage("§f/channel leave");
         player.sendMessage("§f/channel delete [名前]");
         player.sendMessage("§f/channel list");
