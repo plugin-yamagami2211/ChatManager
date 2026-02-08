@@ -84,6 +84,17 @@ public class ChannelManager {
         plugin.saveConfig();
     }
 
+    /**
+     * 指定されたチャンネル名のメンバー（閲覧権限を持つUUID）のセットを返します。
+     */
+    public Set<UUID> getMembers(String name) {
+        ChannelData data = channels.get(name.toLowerCase());
+        if (data != null) {
+            return data.members;
+        }
+        return Collections.emptySet();
+    }
+
     private void loadConfig() {
         if (!plugin.getConfig().contains("channels")) return;
         plugin.getConfig().getConfigurationSection("channels").getKeys(false).forEach(name -> {
