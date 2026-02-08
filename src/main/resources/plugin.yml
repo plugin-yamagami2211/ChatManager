@@ -1,0 +1,10 @@
+name: ChatManager
+version: ${project.version}
+main: jp.yama2211.chatManager.Main
+api-version: '1.21'
+authors: [ yamagami2211 ]
+website: https://yama2211.jp/
+commands:
+  channel:
+    description: チャンネル管理コマンド
+    usage: /channel <create|join|leave|delete|list> [名前]
