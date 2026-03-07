@@ -13,3 +13,18 @@ commands:
     description: 全体チャットにメッセージを送信します
     usage: /global [メッセージ]
     aliases: [g]
+permissions:
+  channel.create:
+    default: op
+  channel.join:
+    default: not op
+  channel.invite:
+    default: op
+  channel.players:
+    default: not op
+  channel.leave:
+    default: not op
+  channel.delete:
+    default: op
+  channel.list:
+    default: not op
