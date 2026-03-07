@@ -11,23 +11,28 @@ spigotでの動作は確認してないのでわかんないです。
 
 ## チャットチャンネル
 
-/channel : ヘルプコマンド  
-/channel create <名前> <public/private> : <名前>チャンネルを作成。(publicは公開、privateは非公開(招待制)チャンネルを作成)  
-/channel join <名前/コード> : チャンネルに参加(コードは招待コード)]  
-/channel invite <プレイヤー名> : 参加しているprivateチャンネルへ<プレイヤー>を招待する。  
-/channel leave : チャンネルから退出  
-/channel delete <名前> : <名前>チャンネルの削除  
-/channel list : チャンネル一覧を表示  
+
+| コマンド | 中身 | 権限 | デフォルト |
+|-----|-----|-----|-----|
+| /channel create <チャンネル名> [public/private] | <名前>チャンネルを作成。<br />(publicは公開、privateは非公開(招待制)チャンネルを作成) | channel.create | op |
+| /channel join <名前/コード> | チャンネルに参加(コードは招待コード)] | channel.join | not op |
+| /channel invite <プレイヤー名> | 参加しているprivateチャンネルへ<プレイヤー>を招待する。 | channel.invite | op |
+| /channel players | チャンネルに参加しているプレイヤーを表示 | channel.players | not op |
+| /channel leave | チャンネルから退出 | channel.leave | not op |
+| /channel delete <名前> | <名前>チャンネルの削除 | channel.delete | op |
+| /channel list | チャンネル一覧を表示 | channel.list | not op |
 
 ※コマンドは[/ch]で短縮できます。
 
 /global [/g] <チャット> でチャンネルにかかわらず、すべてのプレイヤーに表示されます。
 
-※※注意※※  
+~~※※注意※※  
 今見たらパーミッションを一切設定していないので、誰でもコマンドが使用できます。  
 チャンネル削除はチャンネル作成者しか削除できないようにしていたと思いますが、  
 今のバージョン(1.3.2)で使用するなら、注意してください。  
-(やる気があれば修正します)
+(やる気があれば修正します)~~  
+**v1.3.3でパーミッションを追加しました**  
+issues [#1](https://github.com/plugin-yamagami2211/ChatManager/issues/1)  
 
 # 仕様的なやつ
 ## 公開チャンネルと非公開チャンネル
